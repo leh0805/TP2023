@@ -20,7 +20,15 @@ const modelodeUsuario = mongoose.model('contas', new mongoose.Schema({
 }))
 
 
-mongoose.connect('mongodb://127.0.0.1:27017/leticia') // process.env.URL
+const modeloResenha = mongoose.model('resenha', new mongoose.Schema({
+    idUsu: String,
+    resenha: String,
+    totalEstrelas: Number,
+    quantAva: Number,
+
+}))
+
+mongoose.connect('mongodb://127.0.0.1:27017/leticia')
  .then(()=>{
 
 app.post('/get/', async (req,res)=>{
@@ -32,17 +40,40 @@ app.post('/get/', async (req,res)=>{
     res.send(usuarioEncontrado)
 })
  
-app.post('/post',async (req,res) =>{
+app.post('/createuser',async (req,res) =>{
     const usuarioCriado = await modelodeUsuario.create({email: req.body.email, password: req.body.password})
     res.send(usuarioCriado)
 })
 
-app.put('/put', async (req,res)=>{
+
+app.post('/createresenha',async (req,res) =>{
+    let iduser =  modelodeUsuario.findOne({email: req.body.email})
+    console.log(iduser);
+    // const usuarioCriado = await modeloResenha.create( {idUsu: iduser,
+    //     resenha: req.body.resenha,
+    //     totalEstrelas: 0,
+    //     quantAva: 0}
+    // )
+    // res.send({ message: usuarioCriado })
+})
+
+
+app.post('/getresenha',async (req,res) =>{
+    const resenha = await modelodeUsuario.findOne({_id:req.body.id})
+    res.send(resenha)
+})
+
+app.get('/getresenhas',async (req,res) =>{
+    const resenhas = await modelodeUsuario.find()
+    res.send(resenhas)
+})
+
+app.put('/updateuser', async (req,res)=>{
     const usuarioAtualizado = await modelodeUsuario.findOneAndUpdate({email: req.body.email, password: req.body.password}, {email: req.body.newemail, password: req.body.newpassword})
     res.send({ message: "Dados atualizados com sucesso!" })
 })
  
-app.delete('/delete', async (req,res)=>{
+app.delete('/deleteuser', async (req,res)=>{
     const usuarioDeletado = await modelodeUsuario.deleteOne({email: req.body.email, password: req.body.password})
     res.send(usuarioDeletado)
 })  
@@ -51,6 +82,6 @@ app.use((req,res)=>{
     res.send('Não foi possível encontrar sua rota')
 })
 
-app.listen(2800, ()=>console.log(`O servidor ta rodando nessa porta aí meu fiel: ${2800}`))
+app.listen(2900, ()=>console.log(`O servidor esta rodando nessa porta: ${2800}`))
 
 })
