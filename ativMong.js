@@ -20,8 +20,8 @@ const modelodeUsuario = mongoose.model('contas', new mongoose.Schema({
 }))
 
 
-const modeloResenha = mongoose.model('resenha', new mongoose.Schema({
-    idUsu: String,
+const modeloResenha = mongoose.model('resenhas', new mongoose.Schema({
+    idUsu: {type: mongoose.Schema.Types.ObjectId, ref: 'contas'},
     resenha: String,
     totalEstrelas: Number,
     quantAva: Number,
@@ -47,14 +47,16 @@ app.post('/createuser',async (req,res) =>{
 
 
 app.post('/createresenha',async (req,res) =>{
-    let iduser =  modelodeUsuario.findOne({email: req.body.email})
-    console.log(iduser);
-    // const usuarioCriado = await modeloResenha.create( {idUsu: iduser,
-    //     resenha: req.body.resenha,
-    //     totalEstrelas: 0,
-    //     quantAva: 0}
-    // )
-    // res.send({ message: usuarioCriado })
+    let iduser = await modelodeUsuario.findOne({email: req.body.email})
+    iduser = JSON.stringify(iduser._id) 
+    var regex = iduser.split('"')
+
+    const usuarioCriado = await modeloResenha.create( {idUsu: regex[1],
+        resenha: req.body.resenha,
+        totalEstrelas: 0,
+        quantAva: 0}
+    )
+    res.send({ message: usuarioCriado })
 })
 
 
@@ -64,7 +66,7 @@ app.post('/getresenha',async (req,res) =>{
 })
 
 app.get('/getresenhas',async (req,res) =>{
-    const resenhas = await modelodeUsuario.find()
+    const resenhas = await modeloResenha.find()
     res.send(resenhas)
 })
 
@@ -82,6 +84,6 @@ app.use((req,res)=>{
     res.send('Não foi possível encontrar sua rota')
 })
 
-app.listen(2900, ()=>console.log(`O servidor esta rodando nessa porta: ${2800}`))
+app.listen(2800, ()=>console.log(`O servidor esta rodando nessa porta: ${2900}`))
 
 })
