@@ -3,18 +3,15 @@ const app = express()
 const mongoose = require('mongoose')
 app.use(express.json())
 
+const dotenv=require('dotenv')
 
 
-const dotenv = require('dotenv')
-
-if(process.env.devouprod === "dev"){
-dotenv.config({path:'./config/.env.dev'})
+if(process.env.OMG === "DEV"){
+    dotenv.config({path:'./config/.env.dev'})
 }
-if (process.env.devouprod === "prod"){
-   dotenv.config({path: "./config/.env.prod"})
+if(process.env.OMG === "PROD"){
+    dotenv.config({path:'./config/.env.prod'})
 }
-
-
 
 
 const modelodeUsuario = mongoose.model('contas', new mongoose.Schema({
@@ -22,26 +19,63 @@ const modelodeUsuario = mongoose.model('contas', new mongoose.Schema({
     password: String
 }))
 
-mongoose.connect(process.env.bancoDdados)
-.then(function(){
 
-app.get('/get/:email', async (req,res)=>{
-    const usuarioEncontrado = await modelodeUsuario.findOne({email: req.params.email})
+const modeloResenha = mongoose.model('resenhas', new mongoose.Schema({
+    idUsu: {type: mongoose.Schema.Types.ObjectId, ref: 'contas'},
+    resenha: String,
+    totalEstrelas: Number,
+    quantAva: Number,
+
+}))
+
+mongoose.connect('mongodb://127.0.0.1:27017/leticia')
+ .then(()=>{
+
+app.post('/get/', async (req,res)=>{
+    const usuarioEncontrado = await modelodeUsuario.findOne({email: req.body.email, password: req.body.password})
+    if(usuarioEncontrado === null){
+       return res.send("Conta não existente")
+    }
     console.log(usuarioEncontrado);
     res.send(usuarioEncontrado)
 })
  
-app.post('/post',async (req,res) =>{
+app.post('/createuser',async (req,res) =>{
     const usuarioCriado = await modelodeUsuario.create({email: req.body.email, password: req.body.password})
     res.send(usuarioCriado)
 })
 
-app.put('/put', async (req,res)=>{
-    const usuarioAtualizado = await modelodeUsuario.findOneAndUpdate({email: req.body.email, password: req.body.password}, {email: req.body.newemail, password: req.body.newpassword})
-    res.send(usuarioAtualizado)
+
+app.post('/createresenha',async (req,res) =>{
+    let iduser = await modelodeUsuario.findOne({email: req.body.email})
+    iduser = JSON.stringify(iduser._id) 
+    var regex = iduser.split('"')
+
+    const usuarioCriado = await modeloResenha.create( {idUsu: regex[1],
+        resenha: req.body.resenha,
+        totalEstrelas: 0,
+        quantAva: 0}
+    )
+    res.send({ message: usuarioCriado })
 })
-  
-app.delete('/delete', async (req,res)=>{
+
+
+app.post('/getresenha',async (req,res) =>{
+    const resenha = await modelodeUsuario.findOne({_id:req.body.id})
+    res.send(resenha)
+})
+
+app.get('/getresenhas',async (req,res) =>{
+    const resenhas = await modeloResenha.find()
+    res.send(resenhas)
+})
+
+app.put('/updateuser', async (req,res)=>{
+    const usuarioAtualizado = await modelodeUsuario.findOneAndUpdate({email: req.body.email, password: req.body.password}, {email: req.body.newemail, password: req.body.newpassword})
+    res.send({ message: "Dados atualizados com sucesso!" })
+})
+ 
+app.delete('/deleteuser', async (req,res)=>{
     const usuarioDeletado = await modelodeUsuario.deleteOne({email: req.body.email, password: req.body.password})
     res.send(usuarioDeletado)
 })  
@@ -50,6 +84,6 @@ app.use((req,res)=>{
     res.send('Não foi possível encontrar sua rota')
 })
 
-app.listen(3000, ()=>console.log(`O servidor ta rodando nessa porta aí meu fiel ${3000}`))
+app.listen(2800, ()=>console.log(`O servidor esta rodando nessa porta: ${2800}`))
 
 })
